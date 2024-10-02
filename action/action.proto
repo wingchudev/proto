@@ -1,0 +1,168 @@
+syntax = "proto3";
+
+package action;
+option go_package = "git.helloworld.icu/proto/token/action";
+
+
+// used as a grpc error code
+enum RespCode {
+    OK = 0;
+    INVALID_ADDRESS = 21;
+    INVALID_REQID = 22;
+    TRANSACTION_HANDING = 23;
+}
+
+
+enum TransCode {
+    UNKNOW = 0;
+    PENDING = 1;
+    DONE = 2;
+    DROPPED = 3;
+}
+
+service ActionService {
+    rpc NewAccount(AccountRequest) returns (AccountResponse) {}
+    rpc CheckAccount(CheckAccountRequest) returns (CheckAccountResponse) {}
+    rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse) {}
+    rpc Issue(TransactionRequest) returns (TransactionResponse) {}
+    rpc Burn(TransactionRequest) returns (TransactionResponse) {}
+    rpc GetTransactionInfo(GetTransactionInfoRequest) returns (TransactionInfo) {}
+    rpc WatchTransfer(stream WatchTransferRequest) returns (stream TransactionInfo) {}
+    rpc GetTransferHistory(GetTransferHistoryRequest) returns (GetTransferHistoryResponse) {}
+    rpc Transfer(TransactionRequest) returns (TransactionResponse) {}
+    rpc RawTx(RawTransactionRequest) returns (TransactionResponse) {}
+    rpc GetEOSActions(GetEOSActionsRequest) returns (GetEOSActionsResponse) {}
+    rpc GetCurrencyStats(GetCurrencyStatsRequest) returns (GetCurrencyStatsResponse) {}
+}
+
+message AccountRequest {
+    string password = 1;
+}
+
+message AccountResponse {
+    string address = 1;
+}
+
+message GetBalanceRequest {
+    string contractAddr = 1;
+    string address = 2;
+    string symbol = 3;
+}
+
+message GetBalanceResponse {
+    string balance = 1;
+    uint32 decimal = 2;
+}
+
+message TransactionRequest {
+    string reqID = 1;
+    string contractAddr = 2;// for eos, fill with account for eth is acontractaddr
+    string amount = 3;
+    string password = 4;
+    string from = 5;
+    string to = 6;
+    string memo = 7;
+    string symbol = 8; // for eos
+    uint32 precision = 9;
+}
+
+message RawTransactionRequest {
+    string reqID = 1;
+    bool isSigned = 2;
+    string method = 3;
+    string contractAddr = 4; // for eos, fill with account for eth is acontractaddr
+    string actor = 5;
+    string params = 6;
+    string permission = 7; // for eos, by default is active
+}
+
+message TransactionResponse {
+    string transactionID = 1;
+}
+
+message GetTransactionInfoRequest {
+    string transactionID = 1;
+    string memo = 2;
+    string to = 3;
+}
+
+message TransactionInfo {
+    int64 confirmTimes = 1;
+    string transactionID = 2;
+    string blockID = 3;
+    uint64 blockNumber = 4;
+    repeated TransferRecord data = 5;
+    TransCode status = 6; // 1 进行中 2 不可更改的链上 3 废弃
+}
+
+message WatchTransferRequest {
+    string contractAddr = 1; // for eos, fill with account for eth is acontractaddr
+    string from = 2;
+    string to = 3;
+    string symbol = 4; // just for eos
+}
+
+message TransferRecord {
+    string from = 1;
+    string to = 2;
+    string amount = 3;
+    string memo = 4;
+    string token = 5;
+    uint64 toAcctSeq = 6;
+    uint64 fromAcctSeq = 7;
+}
+
+message GetTransferHistoryRequest {
+    string contractAddr = 1;
+    uint64 start = 2;
+    uint64 end = 3;
+    string from = 4;
+    string to = 5;
+    string symbol = 6;
+}
+
+message GetTransferHistoryResponse {
+    repeated TransactionInfo data = 1;
+}
+
+message GetEOSActionsRequest {
+    string Account = 1;
+    uint64 Start = 2;
+}
+
+message GetEOSActionsResponse {
+    repeated EOSAction Data = 1;
+}
+
+message EOSAction {
+    string ContractAddr = 1;
+    string Action = 2;
+    uint64 AccountSeq = 3;
+    uint64 BlockNum = 4;
+    string From = 5;
+    string To = 6;
+    uint64 Amount = 7;
+    string Symbol = 8;
+    string Memo = 9;
+    uint64 Time = 10;
+}
+
+message CheckAccountRequest {
+    string Account = 1;
+}
+
+message CheckAccountResponse {
+    string Account = 1;
+    bool IsExist = 2;
+    string Err = 3;
+}
+
+message GetCurrencyStatsRequest {
+    string Account = 1;
+    string Symbol = 2;
+}
+
+message GetCurrencyStatsResponse {
+    uint64 Supply = 1;
+    string Symbol = 2;
+}
